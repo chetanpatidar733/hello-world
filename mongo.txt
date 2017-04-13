@@ -1,0 +1,144 @@
+dDatabase Operations:
+1) Create new index for character 'i'
+db.linkedin_directory_contact_i.ensureIndex( { "linkedin_start_char" :1, "contact_country": 1, "is_translated":1} , { name: "start_char_country_translated" , background: true});
+
+2) Export data to the main collection
+3) Import data to  new collection
+
+//local server(mongo)
+mongoexport --host 127.0.0.1:27017 --username smarte_admin_root --password Sm@rt9inc --authenticationDatabase admin --authenticationMechanism SCRAM-SHA-1   --db smarte_linkedin_directory_db --collection linkedin_directory_contact -q '{"linkedin_start_char" : "z"}' --out /mnt/mongodb-data-dir/backups/backup_per_character/z/linkedin_directory_contact3.JSON
+mongoimport --host 127.0.0.1:27017 --username smarte_admin_root --password Sm@rt9inc --authenticationDatabase admin --authenticationMechanism SCRAM-SHA-1   --db smarte_linkedin_directory_db --collection linkedin_directory_contact_y --file /mnt/mongodb-data-dir/backups/backup_per_character/y/linkedin_directory_contact3.JSON
+
+
+
+
+//google server(bing)
+mongoexport --host 10.240.0.5:27017 --username smarte_admin_root --password Sm@rt9inc --authenticationDatabase admin --authenticationMechanism SCRAM-SHA-1   --db smarte_linkedin_directory_db --collection linkedin_directory_contact3 -q '{"linkedin_start_char" : "y"}' --out /mnt/mongodb-data-dir/backups/backup_per_character/y/linkedin_directory_contact3.JSON
+mongoimport --host 127.0.0.1:27017 --username smarte_admin_root --password Sm@rt9inc --authenticationDatabase admin --authenticationMechanism SCRAM-SHA-1   --db smarte_linkedin_directory_db --collection linkedin_directory_contact_x --file /mnt/mongodb-data-dir/backups/backup_per_character/x/linkedin_directory_contact3.JSON
+
+***************************************************************************
+BackUp Mongo Collection
+mongoexport --host 127.0.0.1:27017 --username smarte_admin_root --password Sm@rt9inc --authenticationDatabase admin --authenticationMechanism SCRAM-SHA-1   --db smarte_linkedin_directory_db --collection linkedin_directory_company_dedup_2  --out /mnt/mongodb-data-dir/backups/company_backup/linkedin_directory_company_dedup_2_v_3.JSON
+
+
+***********************************************
+create collection in mongo
+db.createCollection("NaicsCode")
+
+*************************************************
+remove data from collection in mongo
+db.NaicsCode.remove({})
+
+*************************************************
+
+Select data from mongo
+
+db.linkedin_directory_contact3.find({}).count()
+db.linkedin_directory_contact3.find({}).limit(50)
+db.collection.find({ "fieldToCheck" : { $exists : true, $ne : null } })
+db.restaurants.find( { "grades.score": { $gt: 30 } } )
+db.restaurants.find( { "grades.score": { $lt: 10 } } )
+
+and 	--> db.restaurants.find( { "cuisine": "Italian", "address.zipcode": "10075" } )
+or     	--> db.restaurants.find( { $or: [ { "cuisine": "Italian" }, { "address.zipcode": "10075" } ] })
+sort	--> db.restaurants.find().sort( { "borough": 1, "address.zipcode": 1 } ) //first borough ad second address.zipcode
+**************************************************
+
+insert data in mongo
+***********************************************
+db.restaurants.insert({"name":"chetan", "employee":"smarte"});
+***********************************************
+
+update data in mongo
+*********************************************
+db.restaurants.update(
+    { "name" : "Juni" },
+    {
+      $set: { "cuisine": "" },
+      $currentDate: { "lastModified": true }
+    },
+  { multi: true} // for multi update
+)
+*********************************************
+
+
+remove data from mongo
+******************************************
+db.restaurants.remove( { "borough": "Manhattan" }  //for multi remove
+db.restaurants.remove( { "borough": "Queens" }, { justOne: true } ) //for single remove
+
+**********************************************
+db.linkedin_directory_company_dedup_test.find({ "$and" : [ { "company_guid" : "EA22B043E3190633"} , { "country_name" : { "$regex" : "^.*canada.*$" , "$options" : "i"}} , { "$or" : [ { "conversion_status" : "Unassigned unmatched company"} , { "conversion_status" : "Unmatched companies assigned"}]}]})
+db.linkedin_directory_company_dedup_test.find({ "$and" : [ { "company_guid" : "EA22B043E3190633"} ],{ "country_name" : { "$regex" : "^.*canada.*$" , "$options" : "i"}}})
+
+****************************************************
+
+rename field
+***********************************************
+db.students.update( { _id: 1 }, { $rename: { 'nickname': 'alias', 'cell': 'mobile' } } )
+db.linkedin_directory_company_dedup_test.update({"CompanyAddedBy": "MR" },{ $rename: { 'CompanyAddedBy': 'country_added_by'} }, { multi: true})
+
+*********************************************************************
+
+remove field
+*************************************
+db.linkedin_directory_company_dedup_2.update({"duns_update_status":{"$exists":true}},{ '$unset': {"duns_update_status": true  } },    false, true)
+
+
+*****************************************************
+Export CSV for MYSQL
+mongoexport --host 127.0.0.1:27017 
+--username smarte_admin_root 
+--password Sm@rt9inc 
+--authenticationDatabase admin 
+--authenticationMechanism SCRAM-SHA-1 
+--db smarte_linkedin_directory_db 
+--collection linkedin_directory_company_dedup_2
+--type=csv  
+--fields company_id,company_name,company_name_without_suffix,company_name_suffix,company_website,company_industry,company_type,company_address,company_locality,company_region,company_zipcode,company_country,company_size,company_public_profile_url,company_logo_url,linkedin_directory_page_url,linkedin_start_char,linkedin_company_id,company_duns,company_guid
+-q '{"company_specialties":{$exists:true}, company_size:{$in:["51-200 employees", "201-500 employees","501-1000 employees", "1001-5000 employees", "5001-10,000 employees", "10,001+ employees"]}}'  --out /root/company_specialities.csv
+
+
+mongoexport --host 127.0.0.1:27017 --username smarte_admin_root --password Sm@rt9inc --authenticationDatabase admin --authenticationMechanism SCRAM-SHA-1 --db smarte_linkedin_directory_db --collection linkedin_directory_company_dedup_2 --type=csv  --fields company_id,company_name,company_name_without_suffix,company_name_suffix,company_website,company_industry,company_type,company_address,company_locality,company_region,company_zipcode,company_country,company_size,company_public_profile_url,company_logo_url,linkedin_directory_page_url,linkedin_start_char,linkedin_company_id,company_duns,company_guid -q '{"duns_update_status" : "MR-HooversFuzzyMatch"}'  --out /root/company_with_guid2.csv 
+
+
+*********************
+Aggregate : 
+db.linkedin_directory_company_dedup_2.aggregate({$group:{"_id":"$company_country_added_by","count":{$sum:1}}});
+
+*********************************
+db.articles.aggregate( [
+  { $match: { $or: [ { score: { $gt: 70, $lt: 90 } }, { views: { $gte: 1000 } } ] } },
+  { $group: { _id: null, count: { $sum: 1 } } }
+] );
+*************
+Sum of one field
+db.linkedin_directory_company_dedup_2.aggregate([ { 
+    $group: { 
+        _id: null, 
+        total: { 
+            $sum: "$no_of_linkedin_contacts" 
+        } 
+    } 
+} ] )
+
+
+***********************************
+Agg with limit and sort
+db.job_title_dictionary_master.aggregate([{$group:{"_id":"$rc_jt_page_no","count":{$sum:1}}} ,{ $sort : { count : -1} }, { $limit : 1500 }],{ allowDiskUse: true });
+
+
+***********************************
+db.jobtitle_dictionary_master_other.aggregate([
+  { $group: {
+    _id: { name: "$contact_designation" },   // replace `name` here twice
+    uniqueIds: { $addToSet: "$_id" },
+    count: { $sum: 1 } 
+  } }, 
+  { $match: { 
+    count: { $gte: 2 } 
+  } },
+  { $sort : { count : -1} },
+  { $limit : 100 }
+],{ allowDiskUse: true });
+
