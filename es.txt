@@ -1,0 +1,1631 @@
+//Sum of Field
+"aggs": {
+    "by_color": {
+      "terms": {
+        "field": "Color"
+      },
+      "aggs": {
+        "total_price": {
+          "sum": {
+            "field": "ListPrice"
+          }
+        },
+        "total_cost": {
+          "sum": {
+            "field": "StandardCost"
+          }
+        }
+      }
+    }
+  }
+  **********************************
+
+ //Compare two Fields
+ --------------------
+ {
+"query": 
+	{
+  "filtered": { 
+       "filter": {
+	     "bool": {
+          "must": [ {
+            "exists": {
+              "field": "ln_comp_emp_range"
+            }
+          },
+{
+            "exists": {
+              "field": "hv_comp_global_emp_range"
+            }
+          }
+,
+{
+"script": {
+        "script": "doc['ln_comp_'].value !=  doc['hv_comp_global_emp_range'].value"
+      }
+}
+		                       ]
+       }
+	   
+      
+    }
+  }
+}
+}
+
+
+
+*******************************
+{
+"query": 
+	{
+  "filtered": {   
+		"filter": {
+			"bool": {
+				"must": [ {
+					"missing": {
+						"field": "contact_levels"
+								}
+						}  ]
+					} 	  
+				  } ,
+				  "query": {
+ "bool": {
+      "must" : [
+             {"match_phrase" : {"data_version":"UPD-16-09-2016"}}
+           	  
+      ],
+ "should" : [
+             {"match_phrase" : {"company_size":"51-200 employees"}},
+             {"match_phrase" : {"company_size":"201-500 employees"}},
+			  {"match_phrase" : {"company_size":"501-1000 employees"}},
+			   {"match_phrase" : {"company_size":"1001-5000 employees"}},
+			    {"match_phrase" : {"company_size":"5001-10,000 employees"}},
+           	  {"match_phrase" : {"company_size":"10,001+ employees"}}
+      ],
+"minimum_should_match":1
+ }
+}
+		  
+               }
+     }
+}
+
+
+
+**********************************************
+Range Query
+----------------
+{
+  "query": 
+{
+  "filtered": {
+    "filter": {
+		"range" : {
+        "no_of_linkedin_contacts" : {
+            "gte" : 5,
+            "lte" : 9
+			}
+		}
+		  } 
+               }
+     }            
+  }
+
+*************************************************
+---> WildCard
+
+{
+"query": 
+	{
+  "filtered": { 
+   "query" : {
+   {
+    "wildcard" : { "contact_full_name" : "*y*" }
+	}
+	,
+      "bool": {
+      "must" : [
+             {"match_phrase" : {"contact_country":"France"}}
+                                  
+      ]
+}
+    }
+  }
+}
+}
+ 
+ 
+***************************************************************
+//must and should ***
+
+ {
+"query": {
+ "bool": {
+      "must" : [
+             {"match_phrase" : {"company_size":"10,001+ employees"}}
+           	  
+      ],
+ "should" : [
+             {"match_phrase" : {"is_splitted":0}},
+            {"match_phrase" : {"is_splitted":1}}
+           	  
+      ],
+"minimum_should_match":1
+ }
+},
+size:5
+}
+
+*************************************************************************
+//Exist elastic query ***
+{
+"query": 
+	{
+  "filtered": {   
+		"filter": {
+			"bool": {
+				"must": [ {
+					"exists": {
+						"field": "company_name"
+								}
+						}  ]
+					} 	  
+				  } 
+		  
+               }
+     }
+}
+
+********************************************************************************
+//match elastic query ***
+{
+"query": {
+       "match":{
+                "company_id":"112100027045"
+                   }
+	   }
+}
+*********************************************************************
+
+{
+  "query": 
+{
+  "filtered": {   
+    "filter": {
+        "bool": {
+          "must": [ {
+            "exists": {
+              "field": "company_name"
+            }
+          }],
+      	  
+		  "must" :[{
+	          "bool" :{
+			       "should" :[
+				             {
+							 "missing" :{
+				                  "field" :"company_country"  
+				    		   }},
+							   {
+							   "missing" :{
+				                  "field" :"hoovers_company_country"  
+				    		   }}
+                                
+							   ]
+			   } 	  
+		  
+		  
+		  } ]
+		  
+                   }
+     }
+  }
+}
+}
+
+***********************************************************
+//should minimum 1 ***
+{
+  "query": {
+    "bool": {
+          "should" : [   {
+                "term" : {"company_id": 98440091020}                   
+            },
+            {
+                "term" : {  "company_name": "Besace" }
+            }
+        ],
+        "minimum_should_match" : 1     	  
+		}
+	}
+}
+
+
+***********************************************************************
+{
+  "query": 
+{	
+  "filtered": {   
+    "filter": {
+        "bool": {
+          "must": [ {
+            "exists": {
+              "field": "company_name"
+            }
+          },
+      	  
+		  {
+	         	 "missing" :{
+				       "field" :"company_country"  
+				            }}                               
+					  ]
+			   } 	  
+		  
+		  
+		  } 
+		  
+                   }
+     },
+"size": 0, 
+  "aggs":{
+    "company list":{
+      "terms": {
+        "field": "company_name",
+        "size": 100
+      } ,     
+    "aggs" : {
+                "country list" : {
+                     "terms" : {
+                         "field" : "contact_country"
+                                }
+                 }
+            }
+			}
+  }
+            
+  }
+  
+  
+
+  *********************************************************************
+SUM OF AGG FIELD
+
+{
+"query":{
+"match_phrase":{
+"contact_current_company": "teva"
+}
+},
+ "aggs" : {
+        "TOTAL_COUNT" : { "sum" : { "field" : "contact_count_by_country" } }
+    }
+}
+
+  
+  ***********************************************************************
+    {
+  "query": 
+  {
+  "filtered": { 
+   "query" : {
+      "bool": {
+      "must" : [
+             {"match_phrase" : {"contact_country":"united states"}},
+             {"match_phrase" : {"company_country":"brazil"}}                              
+      ]
+}
+    },  
+    "filter": {
+                "bool": {
+          "must": [ {
+            "exists": {
+              "field": "company_name"
+            }
+          }
+                                  ]
+       }
+     }
+  }
+},
+size:500
+}
+****************************************************************************************************************
+//only single aggregation ***
+{
+"size":0,
+  "aggs":{
+    "is_splitted":{
+      "terms": {
+        "field": "is_splitted",
+        "size": 100
+      }    
+  			}
+  }
+            
+  }
+  **************************************
+ contact_location
+ {
+"query": 
+	{
+  "filtered": { 
+   "query" : {
+      "bool": {
+      "must" : [
+             {"match_phrase" : {"contact_country":"Canada"}}
+                                  
+      ]
+}
+    },  
+    "filter": {
+                "bool": {
+          "must": [ {
+            "exists": {
+              "field": "contact_location"
+            }
+          }
+                                  ]
+       }
+     }
+  }
+},
+       "size": 10,
+"aggs":{
+    "contact location":{
+      "terms": {
+        "field": "contact_location",
+        "size": 10
+      }    
+  			}
+  }
+}
+ 
+ *********************************
+ stats
+ {
+ "aggs":{
+    "contact location":{
+      "terms": {
+        "field": "company_email_pattern",
+        "size": 10
+      }    
+  			}
+  }
+}
+
+******************************
+ 
+ 
+*****************************************************
+//double aggregation
+{
+  "query": 
+{
+  "filtered": {
+        
+
+    "filter": {
+        "bool": {
+          "must": [ {
+            "exists": {
+              "field": "company_name"
+            }
+          }]
+			   } 	  
+		  	  
+		  } 
+               }
+     },
+"size": 0, 
+  "aggs":{
+    "company name":{
+      "terms": {
+        "field": "company_name",
+        "size": 100
+      } ,     
+    "aggs" : {
+                "contacts" : {
+                     "terms" : {
+                         "field" : "company_name"
+                                }
+                 }
+            }
+			}
+  }
+            
+  }
+  **************************************************************************
+  //terms
+   "query" :{
+		    "bool" :{
+			    "must" :[{
+				     "terms" :{
+					      "linkedin_start_char":"a"
+					          } 
+				         }]    
+					}
+		 },
+  
+  ******************************************************
+  {
+  "query": 
+{
+  "filtered": {   
+    "filter": {
+                "bool": {
+          "must": [ {
+            "exists": {
+              "field": "company_found"
+            }
+          },
+          {
+            "missing": {
+              "field": "company_size"
+            }
+          }
+                                  ]
+       }
+     }
+  }
+},
+"size": 0, 
+  "aggs":{
+    "by_char":{
+      "terms": {
+        "field": "company_guid",
+        "size": 0
+      }      
+    }
+  }
+}
+
+******************************************************
+
+{
+  "query": 
+{
+  "filtered": {   
+    "filter": {
+                "bool": {
+          "must": [
+          {
+            "missing": {
+              "field": "company_id"
+            }
+          }
+                                  ]
+       }
+     }
+  }
+},
+"size" : 0,
+  "aggs":{
+    "contact without company mapped":{
+      "terms": {
+        "field": "contact_current_company",
+        "size": 0
+      }      
+    }
+  }
+}
+***************************************************
+
+http://104.154.50.233:9200/linkedin_company_url/
+{
+"settings": {
+			"index":{
+			"number_of_shards" : 3,
+			"number_of_replicas" : 1
+		 }
+		}
+}		
+
+
+
+http://104.197.102.131:9200/smarte_contact_location
+
+{
+		"settings": {
+			"index":{
+			"number_of_shards" : 3,
+			"analysis":{
+			   "analyzer":{
+				  "term_lowercase":{
+					 "tokenizer":"keyword",
+					 "filter":"lowercase"
+				  }
+			   }
+			}
+		 }
+		},
+        "mappings": {
+			"contact": {
+			    "_source": {
+					"enabled": true
+			    },
+                    "properties":
+                    {
+						
+						"contact_location":{
+							"type":"string",
+							"analyzer":"term_lowercase",
+							"fields":{
+								"analyzed":{
+								   "type":"string"
+								}
+							}
+						},
+						"contact_country":{
+							"type":"string",
+							"analyzer":"term_lowercase",
+							"fields":{
+								"analyzed":{
+								   "type":"string"
+								}
+							}
+						}
+                    }
+			}
+		}
+	}
+
+	**********************************************
+ ---> Make Analyzed Keyword Field
+	   {
+        "smarte_contacts_8":
+        {
+            "aliases":
+            {
+            },
+            "mappings":
+            {
+                "contact":
+                {
+                    "properties":
+                    {
+                        "cid":
+                        {
+                            "type": "long"
+                        },
+                        "company_address":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "company_alias_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "company_country":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_description":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "company_email_domain":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_email_pattern":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_found":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_generic_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "company_global_regions":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_guid":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_id":
+                        {
+                            "type": "long"
+                        },
+                        "company_industry":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_linkedin_id":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_linkedin_string_id":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_locality":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_logo_url":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "company_name_suffix":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_public_profile_url":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_region":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_size":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_specialties":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "company_split_status":
+                        {
+                            "type": "string"
+                        },
+                        "company_status":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_type":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "company_website":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "company_zipcode":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "compay_found":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_country":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_current_company":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_current_company_linkedin_id":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_current_company_logo_url":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_current_company_url":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_current_experience_description":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_current_location":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_current_period":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_current_tenure_start":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_designation":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_designation_en":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_education":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_email_address":
+                        {
+                            "type": "string"
+                        },
+                        "contact_email_address_status":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_email_id":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_first_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_full_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_functions":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_global_regions":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_guid":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_id":
+                        {
+                            "type": "long"
+                        },
+                        "contact_last_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_levels":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_linkedin_headline":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_linkedin_industry":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_location":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_middle_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_name_affix":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_name_prefix":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_name_suffix":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_no_of_connections":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_period":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_picture_url":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_public_profile_url":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_responsibilities":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_skills":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_status":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_sub_functions":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_sub_levels":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_summary":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "contact_work_mobile":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_work_phone1":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "contact_work_phone1_ext":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "designation_language_detected":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_address":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "hoovers_company_all_industry":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_all_naics_codes":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_all_sic_codes":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_auditor":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_city":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_country":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_county":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_download_phase":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_duns":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_ein":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_employee_growth_in_percentage":
+                        {
+                            "type": "double"
+                        },
+                        "hoovers_company_exchange":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_fiscal_year_end":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_generic_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "hoovers_company_global_employee_count":
+                        {
+                            "type": "long"
+                        },
+                        "hoovers_company_global_sales_growth_in_percentage":
+                        {
+                            "type": "double"
+                        },
+                        "hoovers_company_global_sales_in_millions":
+                        {
+                            "type": "double"
+                        },
+                        "hoovers_company_hoovers_id":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_id":
+                        {
+                            "type": "long"
+                        },
+                        "hoovers_company_immediate_parent_company_duns":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_immediate_parent_company_hoovers_id":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_immediate_parent_company_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_income_growth_in_percentage":
+                        {
+                            "type": "double"
+                        },
+                        "hoovers_company_is_exporter":
+                        {
+                            "type": "long"
+                        },
+                        "hoovers_company_is_importer":
+                        {
+                            "type": "long"
+                        },
+                        "hoovers_company_is_manufacturing":
+                        {
+                            "type": "long"
+                        },
+                        "hoovers_company_line_of_business":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "hoovers_company_local_employee_count":
+                        {
+                            "type": "long"
+                        },
+                        "hoovers_company_local_sales_in_millions":
+                        {
+                            "type": "double"
+                        },
+                        "hoovers_company_location_type":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_mailing_address":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "hoovers_company_mailing_city":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_mailing_country":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_mailing_county":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_mailing_state":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_mailing_zip":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_market_value":
+                        {
+                            "type": "double"
+                        },
+                        "hoovers_company_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "hoovers_company_name_suffix":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_net_income_in_millions":
+                        {
+                            "type": "double"
+                        },
+                        "hoovers_company_ownership_type":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_phone_number":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_primary_industry":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_primary_naics_codes":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_primary_sic_codes":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_revenue":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_secondary_industry":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_secondary_naics_codes":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_secondary_sic_codes":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_size":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_state":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_status":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_symbol":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_total_assets_in_millions":
+                        {
+                            "type": "double"
+                        },
+                        "hoovers_company_type":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_ultimate_parent_company_duns":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_ultimate_parent_company_hoovers_id":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_company_ultimate_parent_company_name":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "hoovers_company_website":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase",
+                            "fields":
+                            {
+                                "analyzed":
+                                {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "hoovers_company_year_of_founding":
+                        {
+                            "type": "long"
+                        },
+                        "hoovers_company_zipcode":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "hoovers_split_status":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "is_designation_translated":
+                        {
+                            "type": "long"
+                        },
+                        "is_scraped":
+                        {
+                            "type": "long"
+                        },
+                        "is_splitted":
+                        {
+                            "type": "long"
+                        },
+                        "last_object_id":
+                        {
+                            "type": "string"
+                        },
+                        "linkedin_directory_company_id":
+                        {
+                            "type": "long"
+                        },
+                        "linkedin_start_char":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        },
+                        "no_of_linkedin_contacts":
+                        {
+                            "type": "long"
+                        },
+                        "page_number":
+                        {
+                            "type": "long"
+                        },
+                        "past_experience":
+                        {
+                            "properties":
+                            {
+                                "company_generic_name":
+                                {
+                                    "type": "string",
+                                    "analyzer": "analyzer_keyword_lowercase",
+                                    "fields":
+                                    {
+                                        "analyzed":
+                                        {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "company_logo_url":
+                                {
+                                    "type": "string",
+                                    "analyzer": "analyzer_keyword_lowercase"
+                                },
+                                "company_name":
+                                {
+                                    "type": "string",
+                                    "analyzer": "analyzer_keyword_lowercase",
+                                    "fields":
+                                    {
+                                        "analyzed":
+                                        {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "company_url":
+                                {
+                                    "type": "string",
+                                    "analyzer": "analyzer_keyword_lowercase"
+                                },
+                                "description":
+                                {
+                                    "type": "string",
+                                    "analyzer": "analyzer_keyword_lowercase",
+                                    "fields":
+                                    {
+                                        "analyzed":
+                                        {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "job_title":
+                                {
+                                    "type": "string",
+                                    "analyzer": "analyzer_keyword_lowercase",
+                                    "fields":
+                                    {
+                                        "analyzed":
+                                        {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "location":
+                                {
+                                    "type": "string",
+                                    "analyzer": "analyzer_keyword_lowercase",
+                                    "fields":
+                                    {
+                                        "analyzed":
+                                        {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "tenure":
+                                {
+                                    "type": "string",
+                                    "analyzer": "analyzer_keyword_lowercase"
+                                }
+                            }
+                        },
+                        "rescraped":
+                        {
+                            "type": "long"
+                        },
+                        "rescrapedUpdate":
+                        {
+                            "type": "long"
+                        },
+                        "split_company_parent_id":
+                        {
+                            "type": "long"
+                        },
+                        "top_level":
+                        {
+                            "type": "string",
+                            "analyzer": "analyzer_keyword_lowercase"
+                        }
+                    }
+                }
+            },
+            "settings":
+            {
+                "index":
+                {
+                    "creation_date": "1462822480059",
+                    "uuid": "SezNE_6pTLe1I_W4d4qseA",
+                    "analysis":
+                    {
+                        "analyzer":
+                        {
+                            "analyzer_keyword_lowercase":
+                            {
+                                "filter": "lowercase",
+                                "tokenizer": "keyword"
+                            }
+                        }
+                    },
+                    "number_of_replicas": "1",
+                    "number_of_shards": "3",
+                    "version":
+                    {
+                        "created": "1070399"
+                    }
+                }
+            },
+            "warmers":
+            {
+            }
+        }
+    }
+	
+	
+	***************************************
+Sum OF Field : 
+{"size":0,
+ "aggs" : {
+        "Total Contacts" : { "sum" : { "field" : "rc_comp_mapped_linkedin_cons" } }
+    }
+}
+
+*********************************************************
+{
+"query": 
+	{
+  "filtered": { 
+"filter" : {
+    "script" : {
+        "script" : "doc['rc_jt_levels_drv'].values.size() > 5"
+    }
+
+  }
+}
+}}
+
+  
